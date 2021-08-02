@@ -29,7 +29,10 @@ async function init(options, session = debugSession2, onTerminate, inputStream =
  if(typeof options === 'string'){
   uri = options;
  }else {  
-  const {address, port, sessionHash} = options;  
+  const {address, port, sessionHash, cb:callback} = options;  
+  if(callback){
+   cb = callback;
+  }
   uri = makeInspectorUri(address, port, sessionHash);
  }
 
