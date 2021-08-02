@@ -22,7 +22,7 @@ const { debugSession } = require('./debugsession.js');
  * @return {}
  */
 async function init(options, session = debugSession, onTerminate, inputStream = process.stdin)  {
-  onTerminate = onTerminate || () => {process.exit(0);};
+  onTerminate = onTerminate || function() {process.exit(0);};
   let uri;
  
  if(typeof options === 'string'){
