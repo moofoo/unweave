@@ -16,19 +16,24 @@ const WebSocket = require('ws');
  * @param {function} session - A function receiving the callback to send requests to Inspector, the render and terminate functions provided by Terminal and generating a Streamer process that organizes the debug session interactivity and display
  * @param {function} onTerminate - A callback called after the session is finished
  * @param {function} [displayTarget: process.stdout] - The writable Node.js stream to write the display to
+ 
+ 
  * @return {}
  */
-async function init(cliArguments, session, onTerminate, displayTarget)  {
-  connectToInspector(await parseCliArguments(cliArguments), session, onTerminate, displayTarget);
+async function init(options, session, onTerminate, inputStream)  {
+  const {address, port, sessionHash} = options;  
+  const uri = makeInspectorUri(address, port, sessionHash);
+
+  connectToInspector(uri, session, onTerminate, inputStream);
 }
 
-function connectToInspector(inspectorUri, session, onTerminate, displayTarget) {
+function connectToInspector(inspectorUri, session, onTerminate, inputStream) {
   const webSocket = new WebSocket(`ws://${address(inspectorUri)}:${port(inspectorUri)}/${sessionHash(inspectorUri)}`);
 
   webSocket.onopen = () => {
     console.log("Connection opened");
 
-    startDebugSession(webSocket, session, displayTarget);
+    startDebugSession2(webSocket, session, inputStream);
   };
 
   webSocket.onerror = error => console.log(error);
@@ -57,7 +62,6 @@ function enableDebugger(send) {
   };
 }
 
-async function parseCliArguments(cliArguments) {
   const parseUriOptions = (inspectorUri, uriOptions) => {
     if (uriOptions.length === 0) {
       return inspectorUri;
@@ -85,6 +89,7 @@ async function parseCliArguments(cliArguments) {
     }
   };
 
+async function parseCliArguments(cliArguments) {
   // Command line is [node binary] ["app.js"] [script | uri options]
   if (cliArguments.length === 2) {
     throw "Specify either a script to debug or an Inspector session uri";
@@ -139,6 +144,32 @@ function startDebugSession(webSocket, session, displayTarget) {
 
   sendEnableRuntime(send);
 }
+
+
+function startDebugSession2(webSocket, session, inputStream = process.stdin) {
+  const send = (methodName, parameters, requestId) => webSocket.send(makeInspectorQuery(methodName, parameters, requestId));
+
+  // const [render, closeDisplay] = renderer(displayTarget);
+  const render = (content) => { console.log(JSON.stringify(content)); };
+
+  const terminate = () => {
+    // endInputCapture();
+
+    // closeDisplay();
+
+    setImmediate(() => webSocket.close());
+  };
+
+  Source.from(mergeEvents([makeEmitter(inputStream, "input"), makeEmitter(webSocket, "message")]), "onevent")
+        .withDownstream(async (stream) =>
+          session(send, render, terminate)(
+            await runProgram(send)(
+              await enableDebugger(send)(
+                await runtimeEnabled(stream)))));
+
+  sendEnableRuntime(send);
+}
+
 
 function startInspectedProcess(scriptPath) {
   return new Promise(resolve => {
