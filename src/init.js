@@ -192,4 +192,4 @@ function sessionHash(inspectorUri) {
   return inspectorUri[2];
 }
 
-module.exports = { init };
+module.exports = { init, connectToInspector, enableDebugger, makeInspectorUri, startDebugSession, startInspectedProcess };
