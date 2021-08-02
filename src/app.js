@@ -1,9 +1,10 @@
-#!/usr/bin/env node
-
-// Copyright (c) Adrien Cransac
-// License: MIT
 
 const { debugSession } = require('./debugsession.js');
-const { init } = require('./init.js');
+const { init, connectToInspector, enableDebugger, makeInspectorUri, startDebugSession, startInspectedProcess } = require('./init.js');
 
-init(process.argv, debugSession, () => {});
+module.exports = {
+  debugSession,
+  init, connectToInspector, enableDebugger, makeInspectorUri, startDebugSession, startInspectedProcess
+}
+
+// init(process.argv, debugSession, () => {});
