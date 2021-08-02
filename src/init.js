@@ -21,9 +21,10 @@ const { debugSession } = require('./debugsession.js');
  
  * @return {}
  */
-async function init(options, session = debugSession, onTerminate, inputStream = process.stdin)  {
+async function init(options, session = debugSession, onTerminate, inputStream = process.stdin, output)  {
   onTerminate = onTerminate || function() {process.exit(0);};
   let uri;
+ output = output || function(){return (whatever) => {console.log(JSON.stringify(whatever));}};
  
  if(typeof options === 'string'){
   uri = options;
@@ -32,16 +33,16 @@ async function init(options, session = debugSession, onTerminate, inputStream = 
   uri = makeInspectorUri(address, port, sessionHash);
  }
 
-  connectToInspector(uri, session, onTerminate, inputStream);
+  connectToInspector(uri, session, onTerminate, inputStream, output);
 }
 
-function connectToInspector(inspectorUri, session, onTerminate, inputStream) {
+function connectToInspector(inspectorUri, session, onTerminate, inputStream, output) {
   const webSocket = new WebSocket(`ws://${address(inspectorUri)}:${port(inspectorUri)}/${sessionHash(inspectorUri)}`);
 
   webSocket.onopen = () => {
     console.log("Connection opened");
 
-    startDebugSession2(webSocket, session, inputStream);
+    startDebugSession2(webSocket, session, inputStream, output);
   };
 
   webSocket.onerror = error => console.log(error);
@@ -154,11 +155,11 @@ function startDebugSession(webSocket, session, displayTarget) {
 }
 
 
-function startDebugSession2(webSocket, session, inputStream = process.stdin) {
+function startDebugSession2(webSocket, session, inputStream = process.stdin, output) {
   const send = (methodName, parameters, requestId) => webSocket.send(makeInspectorQuery(methodName, parameters, requestId));
 
   // const [render, closeDisplay] = renderer(displayTarget);
-  const render = (content) => { console.log(JSON.stringify(content)); };
+//  const render = (content) => { console.log(JSON.stringify(content)); };
 
   const terminate = () => {
     // endInputCapture();
@@ -170,7 +171,7 @@ function startDebugSession2(webSocket, session, inputStream = process.stdin) {
 
   Source.from(mergeEvents([makeEmitter(inputStream, "input"), makeEmitter(webSocket, "message")]), "onevent")
         .withDownstream(async (stream) =>
-          session(send, render, terminate)(
+          session(send, output, terminate)(
             await runProgram(send)(
               await enableDebugger(send)(
                 await runtimeEnabled(stream)))));
