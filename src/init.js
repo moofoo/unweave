@@ -7,7 +7,7 @@ const Readline = require('readline');
 const { makeEmitter, mergeEvents, later, Source } = require('@acransac/streamer');
 const { renderer } = require('@acransac/terminal');
 const WebSocket = require('ws');
-const { debugSession } = require('./debugsession.js');
+const { debugSession2 } = require('./debugsession.js');
 
 // # Debug Session Initializer
 
@@ -21,7 +21,7 @@ const { debugSession } = require('./debugsession.js');
  
  * @return {}
  */
-async function init(options, session = debugSession, onTerminate, inputStream = process.stdin, output)  {
+async function init(options, session = debugSession2, onTerminate, inputStream = process.stdin, output)  {
   onTerminate = onTerminate || function() {process.exit(0);};
   let uri;
  output = output || function(){return (whatever) => {console.log(JSON.stringify(whatever));}};
