@@ -1,6 +1,6 @@
 
 const { debugSession } = require('./debugsession.js');
-const { init, connectToInspector, enableDebugger, makeInspectorUri, startDebugSession, startInspectedProcess } = require('./init.js');
+const { init, connectToInspector, enableDebugger, makeInspectorUri, startDebugSession, startDebugSession2, startInspectedProcess } = require('./init.js');
 const protocol = require('./protocol.js');
 
 module.exports = {
