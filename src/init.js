@@ -23,8 +23,14 @@ const { debugSession } = require('./debugsession.js');
  */
 async function init(options, session = debugSession, onTerminate, inputStream = process.stdin)  {
   onTerminate = onTerminate || () => {process.exit(0);};
+  let uri;
+ 
+ if(typeof options === 'string'){
+  uri = options;
+ }else {  
   const {address, port, sessionHash} = options;  
-  const uri = makeInspectorUri(address, port, sessionHash);
+  uri = makeInspectorUri(address, port, sessionHash);
+ }
 
   connectToInspector(uri, session, onTerminate, inputStream);
 }
