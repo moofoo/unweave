@@ -21,7 +21,7 @@ const { debugSession2 } = require('./debugsession.js');
  
  * @return {}
  */
-async function init(options, session = debugSession2, onTerminate, inputStream = process.stdin, output)  {
+async function init(options, session = debugSession2, onTerminate, inputStream = process.stdin, output, cb)  {
   onTerminate = onTerminate || function() {process.exit(0);};
   let uri;
  output = output || function(){return (whatever) => {console.log(JSON.stringify(whatever));}};
@@ -33,16 +33,22 @@ async function init(options, session = debugSession2, onTerminate, inputStream =
   uri = makeInspectorUri(address, port, sessionHash);
  }
 
-  connectToInspector(uri, session, onTerminate, inputStream, output);
+  connectToInspector(uri, session, onTerminate, inputStream, output, cb);
 }
 
-function connectToInspector(inspectorUri, session, onTerminate, inputStream, output) {
+function connectToInspector(inspectorUri, session, onTerminate, inputStream, output, cb) {
+ cb = cb || function(){};
   const webSocket = new WebSocket(`ws://${address(inspectorUri)}:${port(inspectorUri)}/${sessionHash(inspectorUri)}`);
 
   webSocket.onopen = () => {
     console.log("Connection opened");
 
-    startDebugSession2(webSocket, session, inputStream, output);
+    const send = startDebugSession2(webSocket, session, inputStream, output);
+   
+   (async () => {
+    await cb(send, webSocket)
+   })()  
+    
   };
 
   webSocket.onerror = error => console.log(error);
@@ -152,6 +158,8 @@ function startDebugSession(webSocket, session, displayTarget) {
                 await runtimeEnabled(stream)))));
 
   sendEnableRuntime(send);
+ 
+ return send;
 }
 
 
@@ -177,6 +185,8 @@ function startDebugSession2(webSocket, session, inputStream = process.stdin, out
                 await runtimeEnabled(stream)))));
 
   sendEnableRuntime(send);
+ 
+ return send;
 }
 
 
