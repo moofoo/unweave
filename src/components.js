@@ -217,6 +217,25 @@ function messages(inspectedMessage, logger) {
   };
 }
 
+function messages2(inspectedMessage, logger) {
+    return (noParameters) => (predecessor) => (stream) => {
+        const label = predecessor
+            ? tag(predecessor)
+            : highlightOneCharacter(
+                  'messages',
+                  interactionKeys('messagesFocus')
+              );
+
+        if (inspectedMessage(message(stream))) {
+            return (f) => f(noParameters)(`${logger(message(stream))}`);
+        } else if (isError(message(stream))) {
+            return (f) => f(noParameters)(`${logger(message(stream))}`);
+        }
+    };
+}
+
+
+
 /*
  * Get the current location of the run
  * @return {Component} - The component's output is the location of the run when paused
@@ -336,6 +355,7 @@ module.exports = {
   instructions,
   logCapture,
   messages,
+  messages2,
   runLocation,
   scriptSource,
   sourceTree,
