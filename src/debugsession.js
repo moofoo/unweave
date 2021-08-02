@@ -50,4 +50,30 @@ function debugSession(send, render, terminate) {
   };
 }
 
-module.exports = { debugSession };
+
+function debugSession2(send, render, terminate) {
+    return async (stream) => {
+        const debugLogger = () => {};
+
+        return loop(terminate)(
+            await step(send)(
+                await queryInspector(send)(
+                    await addBreakpoint(send)(
+                        await pullScriptSource(send)(
+                            await parseEnvironmentTree(send)(
+                                await parseSourceTree()(
+                                    await parseCaptures()(
+                                        await changeMode(stream)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        );
+    };
+}
+
+
+module.exports = { debugSession, debugSession2 };
